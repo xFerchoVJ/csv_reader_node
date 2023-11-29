@@ -11,5 +11,5 @@ app.use(cors());
 app.use("/api/csv", csvRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Server en puerto ${PORT}`);
+  console.log(`Server corriendo en http://localhost:${PORT}`);
 });

@@ -1,27 +1,22 @@
-// libs/index.js
 import fs from "fs";
 import { parse } from "csv-parse";
 
 const processCSV = (filePath) => {
   return new Promise((resolve, reject) => {
-    // Arreglo para almacenar los encabezados
     let headers = [];
-    // Arreglo para almacenar los datos
     let data = [];
 
     fs.createReadStream(filePath)
       .pipe(parse({ delimiter: ",", from_line: 1 }))
       .on("data", (row) => {
-        // Si headers está vacío, asumimos que estamos en la primera línea
         if (headers.length === 0) {
           headers = row;
         } else {
-          // Procesar datos aquí, usando los encabezados
           const dataCsv = {};
           for (let i = 0; i < headers.length; i++) {
-            dataCsv[headers[i]] = row[i];
+            // Verifica si la celda está vacía y reemplaza con cero si es así
+            dataCsv[headers[i]] = row[i] === "" ? "0" : row[i];
           }
-          // Agregar la fila al arreglo de datos
           data.push(dataCsv);
         }
       })
