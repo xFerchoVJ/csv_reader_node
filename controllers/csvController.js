@@ -8,7 +8,8 @@ import fs from "fs/promises";
 import path from "path";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-
+import { kmeans } from "ml-kmeans";
+import { Apriori } from "node-apriori";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const importCsv = async (req, res) => {
@@ -106,4 +107,58 @@ const getReviewStats = async (req, res) => {
       .json({ error: "Error al obtener los stats de las Reviews" });
   }
 };
-export { importCsv, getRatingsDistribution, getReviewStats };
+
+const clusterAnalysis = async (req, res) => {
+  try {
+    console.log("entre");
+    const { data } = req.body;
+    const features = data.map((review) => [
+      Number(review.review_rating_service),
+      Number(review.review_rating_atmosphere),
+      Number(review.review_rating_food),
+    ]);
+
+    const k = 3; //Numero de clusters
+    const clusters = kmeans(features, k);
+    const ans = clusters.computeInformation(data);
+    res.status(200).json(ans);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ error: "Error al obtener el Cluster Analysis" });
+  }
+};
+
+const getAssociationAnalysis = async (req, res) => {
+  try {
+    const { reviewsData } = req.body;
+
+    const transactions = reviewsData.map((review) => [
+      review.review_rating_service,
+      review.review_rating_atmosphere,
+      review.review_rating_food,
+    ]);
+
+    // Configurar y ejecutar el análisis de asociación
+    const apriori = new Apriori(0.01, 0.6);
+    const result = await apriori.exec(transactions);
+    const associationData = result.itemsets.map((itemset) => ({
+      items: itemset.items.join(", "), // Convertir los ítems en una cadena para mostrar
+      support: itemset.support, // Obtener el soporte del conjunto de ítems
+    }));
+
+    // Devolver los datos al frontend
+    res.json({ associationData });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+export {
+  importCsv,
+  getRatingsDistribution,
+  getReviewStats,
+  clusterAnalysis,
+  getAssociationAnalysis,
+};
