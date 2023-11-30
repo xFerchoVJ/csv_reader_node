@@ -5,6 +5,8 @@ import csvRoutes from "./routes/csvRoutes.js";
 const app = express();
 const PORT = 3000;
 
+app.use(express.json({ limit: "500mb" }));
+app.use(express.urlencoded({ limit: "500mb", extended: true }));
 app.use(morgan("dev"));
 app.use(cors());
 
